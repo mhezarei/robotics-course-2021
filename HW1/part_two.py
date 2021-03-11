@@ -3,24 +3,13 @@ import math
 import sympy as sym
 from sympy.solvers import solve
 import part_one
+import matplotlib.pyplot as plt
 
 CONVERSION = math.pi / 180
 NUM_ITERATIONS = 100
 
-def backward(constants: list) -> dict:
-    x_dot_i, y_dot_i, theta_dot_i, r, d, theta = constants
-
-    inertial_frame_loc = [x_dot_i, y_dot_i, theta_dot_i]
-
-    r_theta = [[np.cos(theta), np.sin(theta), 0],
-               [-np.sin(theta), np.cos(theta), 0],
-               [0, 0, 1]]
-
-    
-    robot_frame_loc = np.matmul(r_theta, inertial_frame_loc)
-
-    x_dot_r, y_dot_r, theta_dot_r = robot_frame_loc
-
+def backward_kinematics(constants: list) -> dict:
+    x_dot_r, y_dot_r, theta_dot_r, r, d = constants
     sym.init_printing()
     
     a, b = sym.symbols('a,b')
@@ -37,25 +26,47 @@ def backward(constants: list) -> dict:
 
 def prompt():
     print("Please enter the following information (in order and "
-          "space-separated):\n"
+          "space-separated and in robot frame):\n"
           "1. Linear Velocity of x axis in cm/s\n"
           "2. Linear Velocity of y axis in cm/s\n"
           "3. Angular Velocity of the chassis in deg/s\n"
           "4. Radius of the wheels in cm\n"
           "5. Distance between the two wheels in cm\n"
-          "6. Angle around the inertial frame in deg")
-    # enter this for now 1 1 1 2.5 20 45
+)
+    # enter this for now 1.4 0 1 2.5 20
+
+    # for first plot enter this: 1.4 0 0 2.5 20
+    # for second plot enter this: 0 0 10 2.5 20
+
     args = list(map(float, input().split()))
     return args
 
 
+def draw_plot(wheels_velocities: list):
+    y1 = [wheels_velocities[0] for i in range(10)]
+    y2 = [wheels_velocities[1] for i in range(10)]
+
+    plt.figure(1)
+    plt.subplot(211)
+    plt.plot(y1)
+    plt.ylabel("φ'1(rad/s)")
+    plt.xlabel('time(s)')
+
+    plt.subplot(212)
+    plt.plot(y2)
+    plt.ylabel("φ'2(rad/s)")
+    plt.xlabel('time(s)')
+
+    plt.show()
 
 def main():
     args = prompt()
     constants = args
     
-    angolar_velocity_of_wheels = backward(constants)
-    print(angolar_velocity_of_wheels)
+    wheels_velocities = backward_kinematics(constants)
+    print(wheels_velocities)
+
+    draw_plot(wheels_velocities)
 
 
 if __name__ == '__main__':
