@@ -45,6 +45,9 @@ def split_merge(theta: list, rho: list):
     x, y = polar_to_cartesian(theta, rho)
     points = [np.array([x[i], y[i]]) for i in range(len(x))]
     res = split_merge_helper(points)
+    
+    res = [r for r in res if not (len(r) < 5 and line_length(r[0], r[-1]) > 6)]
+    
     for r in res:
         plt.scatter(np.array(r)[:, 0], np.array(r)[:, 1])
         first = r[0]
