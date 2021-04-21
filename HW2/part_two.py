@@ -4,9 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# def radian
-
-
 def polar_to_cartesian(theta: list, rho: list):
     assert len(theta) == len(rho), "The length does not match!"
     x = []
@@ -19,7 +16,9 @@ def polar_to_cartesian(theta: list, rho: list):
 
 
 def split_merge_helper(points, d_thresh=1):
-    plt.scatter(np.array(points)[:, 0], np.array(points)[:, 1])
+    if len(points) < 3:
+        return [points]
+    
     s = points.copy()
     first = s[0]
     last = s[-1]
@@ -28,71 +27,58 @@ def split_merge_helper(points, d_thresh=1):
     max_d, max_i = max(distances), distances.index(max(distances))
     
     if max_d < d_thresh:
-        plt.plot([first[0], last[0]], [first[1], last[1]])
-        ret = [first, last]
+        ret = [points]
     else:
         res1 = split_merge_helper(points[:max_i + 1])
         res2 = split_merge_helper(points[max_i:])
-        ret = [res1, res2]
+        ret = res1 + res2
     
     return ret
 
 
+def line_length(p1, p2):
+    return np.sqrt(abs(p1[0] - p2[0]) * abs(p1[0] - p2[0])
+                   + abs(p1[1] - p2[1]) * abs(p1[1] - p2[1]))
+
+
 def split_merge(theta: list, rho: list):
     x, y = polar_to_cartesian(theta, rho)
-    
-    # second
     points = [np.array([x[i], y[i]]) for i in range(len(x))]
-    plt.scatter(x, y)
     res = split_merge_helper(points)
-    print(np.array(res).shape)
-    # plt.scatter(np.array(res)[:, 0], np.array(res)[:, 1])
+    for r in res:
+        plt.scatter(np.array(r)[:, 0], np.array(r)[:, 1])
+        first = r[0]
+        last = r[-1]
+        plt.plot([first[0], last[0]], [first[1], last[1]])
     plt.show()
-    # for h in res:
-    #     print(h)
-    #     plt.scatter(np.array(h)[:, 0], np.array(h)[:, 1])
-    # plt.show()
     
-    # first
-    # hist = []
-    # d_thresh = 7
-    # points = [[np.array([x[i], y[i]]) for i in range(len(x))]]
-    # i = 0
-    # while True:
-    #     if i == len(points):
-    #         break
-    #     print(np.array(points).shape)
-    #     print(points)
-    #     s = points[i]
-    #     first = s[0]
-    #     last = s[-1]
-    #     # if first[0] == last[0] and first[1] == last[1]:
-    #     #     i += 1
-    #     #     continue
-    #     distances = [np.abs(np.cross(last - first, p - first) /
-    #                         np.linalg.norm(last - first)) for p in s]
-    #     max_d, max_i = max(distances), distances.index(max(distances))
-    #     if max_d < d_thresh:
-    #         hist.append(s)
-    #         i += 1
-    #         continue
-    #
-    #     print(len(s), max_i)
-    #     points.remove(s)
-    #     points.insert(i, s[:max_i + 1])
-    #     points.insert(i + 1, s[max_i:])
-    #
-    #     print("asdf", max_d, max_i, s[max_i])
-    #     plt.scatter(x, y)
-    #     print(s[max_i])
-    #     plt.scatter(np.array(s)[:, 0], np.array(s)[:, 1])
-    #     plt.scatter(s[max_i][0], s[max_i][1])
-    #     plt.plot([first[0], last[0]], [first[1], last[1]], 'r-')
-    #     plt.show()
-    #
-    # for h in hist:
-    #     plt.scatter(np.array(h)[:, 0], np.array(h)[:, 1])
-    # plt.show()
+    # merging
+    final = []
+    for i in range(0, len(res) - 1, 2):
+        d1 = res[i]
+        d2 = res[i + 1]
+        e1 = sum([np.abs(np.cross(d1[-1] - d1[0], p - d1[0]) /
+                         np.linalg.norm(d1[-1] - d1[0])) for p in
+                  d1]) / line_length(d1[0], d1[-1])
+        e2 = sum([np.abs(np.cross(d1[-1] - d1[0], p - d1[0]) /
+                         np.linalg.norm(d1[-1] - d1[0])) for p in
+                  d2]) / line_length(d2[0], d2[-1])
+        e3 = sum([np.abs(np.cross(d2[-1] - d1[0], p - d1[0]) /
+                         np.linalg.norm(d2[-1] - d1[0])) for p in
+                  d1 + d2]) / line_length(d1[0], d2[-1])
+        
+        if e1 + e2 > e3:
+            final.append(d1 + d2)
+        else:
+            final.append(d1)
+            final.append(d2)
+    
+    for r in final:
+        plt.scatter(np.array(r)[:, 0], np.array(r)[:, 1])
+        first = r[0]
+        last = r[-1]
+        plt.plot([first[0], last[0]], [first[1], last[1]])
+    plt.show()
 
 
 def main():
@@ -104,11 +90,7 @@ def main():
         data = f.readlines()
         rho = list(map(float, data))
     
-    # theta.sort()
-    # rho = [x for _, x in sorted(zip(theta, rho))]
     split_merge(theta, rho)
-    print(theta)
-    print(rho)
 
 
 if __name__ == '__main__':
